@@ -1,9 +1,8 @@
 #include "../include/file_processor.h"
+#include <filesystem>
 #include <fstream>
 #include <random>
 #include <vector>
-#include <cctype> // 添加头文件
-#include <filesystem> // C++17 标准文件系统库
 
 namespace fs = std::filesystem;
 
@@ -24,8 +23,7 @@ bool FileProcessor::secureDelete(const std::string& path) {
     
     size_t size = fileSize(path);
     if (size == 0) {
-        fs::remove(path);
-        return true;
+        return fs::remove(path);
     }
     
     try {

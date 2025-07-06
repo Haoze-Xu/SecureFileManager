@@ -1,12 +1,12 @@
 #include "../include/crypto_engine.h"
-#include "../include/file_processor.h" // 确保包含 file_processor.h
 #include <fstream>
 #include <stdexcept>
 #include <cmath>
 #include <cctype>
-#include <filesystem> // 添加 filesystem 头文件
+#include <filesystem>
+#include <iostream>
 
-namespace fs = std::filesystem; // 添加命名空间别名
+namespace fs = std::filesystem;
 
 // 密钥派生实现
 void CryptoEngine::deriveKey(const std::string& password, 
@@ -71,20 +71,46 @@ bool CryptoEngine::encryptFile(const std::string& inputPath,
         // 分块处理
         const size_t bufferSize = 4096;
         char buffer[bufferSize];
+        size_t totalBytes = 0;
         
         while (inFile.read(buffer, bufferSize)) {
             size_t bytesRead = inFile.gcount();
             std::string ciphertext;
             
             CryptoPP::StringSource ss(
-                reinterpret_cast<const CryptoPP::byte*>(buffer), bytesRead, true,
+                reinterpret_cast<const CryptoPP::byte*>(buffer), 
+                bytesRead, 
+                true,
                 new CryptoPP::StreamTransformationFilter(
-                    encryptor, new CryptoPP::StringSink(ciphertext)
+                    encryptor, 
+                    new CryptoPP::StringSink(ciphertext)
                 )
             );
             
             outFile.write(ciphertext.data(), ciphertext.size());
+            totalBytes += bytesRead;
         }
+        
+        // 处理最后一块
+        if (inFile.gcount() > 0) {
+            size_t bytesRead = inFile.gcount();
+            std::string ciphertext;
+            
+            CryptoPP::StringSource ss(
+                reinterpret_cast<const CryptoPP::byte*>(buffer), 
+                bytesRead, 
+                true,
+                new CryptoPP::StreamTransformationFilter(
+                    encryptor, 
+                    new CryptoPP::StringSink(ciphertext)
+                )
+            );
+            
+            outFile.write(ciphertext.data(), ciphertext.size());
+            totalBytes += bytesRead;
+        }
+        
+        std::cout << "加密完成: " << totalBytes << " 字节处理" << std::endl;
         
         // 清理敏感数据
         secureWipe(key, sizeof(key));
@@ -93,6 +119,7 @@ bool CryptoEngine::encryptFile(const std::string& inputPath,
         
         return true;
     } catch (const std::exception& e) {
+        std::cerr << "加密错误: " << e.what() << std::endl;
         throw std::runtime_error(std::string("加密失败: ") + e.what());
     }
 }
@@ -105,6 +132,12 @@ bool CryptoEngine::decryptFile(const std::string& inputPath,
         // 检查输入文件
         if (!fs::exists(inputPath)) {
             throw std::runtime_error("输入文件不存在: " + inputPath);
+        }
+        
+        // 获取文件大小
+        size_t fileSize = fs::file_size(inputPath);
+        if (fileSize <= 32) { // 文件头大小
+            throw std::runtime_error("加密文件无效: " + inputPath);
         }
         
         // 打开输入文件
@@ -137,28 +170,55 @@ bool CryptoEngine::decryptFile(const std::string& inputPath,
         }
         
         // 分块解密
-        const size_t bufferSize = 4096 + CryptoPP::AES::BLOCKSIZE; // 考虑填充块
+        const size_t bufferSize = 4096;
         char buffer[bufferSize];
+        size_t totalBytes = 0;
         
         while (inFile.read(buffer, bufferSize)) {
             size_t bytesRead = inFile.gcount();
             std::string plaintext;
             
             CryptoPP::StringSource ss(
-                reinterpret_cast<const CryptoPP::byte*>(buffer), bytesRead, true,
+                reinterpret_cast<const CryptoPP::byte*>(buffer), 
+                bytesRead, 
+                true,
                 new CryptoPP::StreamTransformationFilter(
-                    decryptor, new CryptoPP::StringSink(plaintext)
+                    decryptor, 
+                    new CryptoPP::StringSink(plaintext)
                 )
             );
             
             outFile.write(plaintext.data(), plaintext.size());
+            totalBytes += bytesRead;
         }
+        
+        // 处理最后一块
+        if (inFile.gcount() > 0) {
+            size_t bytesRead = inFile.gcount();
+            std::string plaintext;
+            
+            CryptoPP::StringSource ss(
+                reinterpret_cast<const CryptoPP::byte*>(buffer), 
+                bytesRead, 
+                true,
+                new CryptoPP::StreamTransformationFilter(
+                    decryptor, 
+                    new CryptoPP::StringSink(plaintext)
+                )
+            );
+            
+            outFile.write(plaintext.data(), plaintext.size());
+            totalBytes += bytesRead;
+        }
+        
+        std::cout << "解密完成: " << totalBytes - 32 << " 字节处理" << std::endl;
         
         // 清理敏感数据
         secureWipe(key, sizeof(key));
         
         return true;
     } catch (const std::exception& e) {
+        std::cerr << "解密错误: " << e.what() << std::endl;
         throw std::runtime_error(std::string("解密失败: ") + e.what());
     }
 }

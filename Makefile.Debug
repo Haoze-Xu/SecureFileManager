@@ -194,8 +194,7 @@ debug/crypto_engine.o: src/crypto_engine.cpp include/crypto_engine.h \
 		../cryptopp/include/cryptopp/sha.h \
 		../cryptopp/include/cryptopp/iterhash.h \
 		../cryptopp/include/cryptopp/pwdbased.h \
-		../cryptopp/include/cryptopp/hrtimer.h \
-		include/file_processor.h
+		../cryptopp/include/cryptopp/hrtimer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug/crypto_engine.o src/crypto_engine.cpp
 
 debug/file_processor.o: src/file_processor.cpp include/file_processor.h
