@@ -78,31 +78,25 @@ bool CryptoEngine::encryptFile(const std::string& inputPath,
             std::string ciphertext;
             
             CryptoPP::StringSource ss(
-                reinterpret_cast<const CryptoPP::byte*>(buffer), 
-                bytesRead, 
-                true,
+                reinterpret_cast<const CryptoPP::byte*>(buffer), bytesRead, true,
                 new CryptoPP::StreamTransformationFilter(
-                    encryptor, 
-                    new CryptoPP::StringSink(ciphertext)
+                    encryptor, new CryptoPP::StringSink(ciphertext)
                 )
             );
             
             outFile.write(ciphertext.data(), ciphertext.size());
-            totalBytes += bytesRead;
+            totalBytes += bytesRead;  // 正确统计原始字节
         }
         
         // 处理最后一块
-        if (inFile.gcount() > 0) {
+        if (inFile.eof() && inFile.gcount() > 0) {
             size_t bytesRead = inFile.gcount();
             std::string ciphertext;
             
             CryptoPP::StringSource ss(
-                reinterpret_cast<const CryptoPP::byte*>(buffer), 
-                bytesRead, 
-                true,
+                reinterpret_cast<const CryptoPP::byte*>(buffer), bytesRead, true,
                 new CryptoPP::StreamTransformationFilter(
-                    encryptor, 
-                    new CryptoPP::StringSink(ciphertext)
+                    encryptor, new CryptoPP::StringSink(ciphertext)
                 )
             );
             
@@ -173,45 +167,43 @@ bool CryptoEngine::decryptFile(const std::string& inputPath,
         const size_t bufferSize = 4096;
         char buffer[bufferSize];
         size_t totalBytes = 0;
+        size_t decryptedBytes = 0;  // 新增解密字节统计
         
         while (inFile.read(buffer, bufferSize)) {
             size_t bytesRead = inFile.gcount();
             std::string plaintext;
             
             CryptoPP::StringSource ss(
-                reinterpret_cast<const CryptoPP::byte*>(buffer), 
-                bytesRead, 
-                true,
+                reinterpret_cast<const CryptoPP::byte*>(buffer), bytesRead, true,
                 new CryptoPP::StreamTransformationFilter(
-                    decryptor, 
-                    new CryptoPP::StringSink(plaintext)
+                    decryptor, new CryptoPP::StringSink(plaintext)
                 )
             );
             
             outFile.write(plaintext.data(), plaintext.size());
             totalBytes += bytesRead;
+            decryptedBytes += plaintext.size();  // 统计解密后的字节
         }
         
         // 处理最后一块
-        if (inFile.gcount() > 0) {
+        if (inFile.eof() && inFile.gcount() > 0) {
             size_t bytesRead = inFile.gcount();
             std::string plaintext;
             
             CryptoPP::StringSource ss(
-                reinterpret_cast<const CryptoPP::byte*>(buffer), 
-                bytesRead, 
-                true,
+                reinterpret_cast<const CryptoPP::byte*>(buffer), bytesRead, true,
                 new CryptoPP::StreamTransformationFilter(
-                    decryptor, 
-                    new CryptoPP::StringSink(plaintext)
+                    decryptor, new CryptoPP::StringSink(plaintext)
                 )
             );
             
             outFile.write(plaintext.data(), plaintext.size());
             totalBytes += bytesRead;
+            decryptedBytes += plaintext.size();
         }
         
-        std::cout << "解密完成: " << totalBytes - 32 << " 字节处理" << std::endl;
+        // 修正显示：显示实际解密的字节数
+        std::cout << "解密完成: " << decryptedBytes << " 字节处理" << std::endl;
         
         // 清理敏感数据
         secureWipe(key, sizeof(key));
