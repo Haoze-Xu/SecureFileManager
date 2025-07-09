@@ -265,6 +265,13 @@ Makefile: SecureFileManager.pro ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/win32
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/win32/console.prf \
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/precompile_header.prf \
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/warn_on.prf \
+		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/permissions.prf \
+		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/qt.prf \
+		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/resources_functions.prf \
+		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/resources.prf \
+		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/moc.prf \
+		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/win32/opengl.prf \
+		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/uic.prf \
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/qmake_use.prf \
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/file_copies.prf \
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/testcase_targets.prf \
@@ -272,6 +279,9 @@ Makefile: SecureFileManager.pro ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/win32
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/yacc.prf \
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/lex.prf \
 		SecureFileManager.pro \
+		../../MySoftWare/Qt/6.9.1/mingw_64/lib/Qt6Widgets.prl \
+		../../MySoftWare/Qt/6.9.1/mingw_64/lib/Qt6Gui.prl \
+		../../MySoftWare/Qt/6.9.1/mingw_64/lib/Qt6Core.prl \
 		.qmake.stash \
 		../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/build_pass.prf
 	$(QMAKE) -o Makefile SecureFileManager.pro
@@ -470,6 +480,13 @@ Makefile: SecureFileManager.pro ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/win32
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/win32/console.prf:
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/precompile_header.prf:
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/warn_on.prf:
+../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/permissions.prf:
+../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/qt.prf:
+../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/resources_functions.prf:
+../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/resources.prf:
+../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/moc.prf:
+../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/win32/opengl.prf:
+../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/uic.prf:
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/qmake_use.prf:
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/file_copies.prf:
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/testcase_targets.prf:
@@ -477,6 +494,9 @@ Makefile: SecureFileManager.pro ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/win32
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/yacc.prf:
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/lex.prf:
 SecureFileManager.pro:
+../../MySoftWare/Qt/6.9.1/mingw_64/lib/Qt6Widgets.prl:
+../../MySoftWare/Qt/6.9.1/mingw_64/lib/Qt6Gui.prl:
+../../MySoftWare/Qt/6.9.1/mingw_64/lib/Qt6Core.prl:
 .qmake.stash:
 ../../MySoftWare/Qt/6.9.1/mingw_64/mkspecs/features/build_pass.prf:
 qmake: FORCE
@@ -490,6 +510,18 @@ clean: release-clean debug-clean  FORCE
 distclean: release-distclean debug-distclean  FORCE
 	-$(DEL_FILE) Makefile
 	-$(DEL_FILE) .qmake.stash
+
+release-mocclean:
+	$(MAKE) -f $(MAKEFILE).Release mocclean
+debug-mocclean:
+	$(MAKE) -f $(MAKEFILE).Debug mocclean
+mocclean: release-mocclean debug-mocclean
+
+release-mocables:
+	$(MAKE) -f $(MAKEFILE).Release mocables
+debug-mocables:
+	$(MAKE) -f $(MAKEFILE).Debug mocables
+mocables: release-mocables debug-mocables
 
 check: first
 

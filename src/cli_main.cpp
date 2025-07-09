@@ -3,17 +3,10 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
-#include <filesystem>  // 添加 filesystem 头文件
-#include <windows.h>   // 添加 Windows 头文件
+#include <filesystem>
+#include <windows.h>
 
-// 添加命名空间别名
 namespace fs = std::filesystem;
-
-// 命令行进度显示
-void progressCallback(int percent) {
-    std::cout << "\r处理中: " << std::setw(3) << percent << "%" << std::flush;
-    if (percent == 100) std::cout << std::endl;
-}
 
 int main(int argc, char* argv[]) {
     // 设置控制台为UTF-8编码
