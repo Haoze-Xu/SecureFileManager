@@ -7,6 +7,9 @@
 #include <QThread>
 #include <QDragEnterEvent>
 #include <QDropEvent>
+#include <QTreeWidget>
+#include <QFileInfo>
+#include <QDir>
 #include "../include/crypto_engine.h"
 #include "../include/file_processor.h"
 
@@ -31,6 +34,7 @@ protected:
 private slots:
     // 文件操作
     void on_addFilesButton_clicked();
+    void on_addDirectoryButton_clicked();
     void on_removeSelectedButton_clicked();
     void on_clearListButton_clicked();
     
@@ -60,6 +64,9 @@ private:
     QString lastOutputDir;
     
     void updateControlsState(bool enabled);
+    void loadDirectory(const QString &path, QTreeWidgetItem *parent);
+    void collectFilesFromItem(QTreeWidgetItem *item, QList<QString> &files);
+    QList<QString> collectSelectedFiles();
 };
 
 class WorkerThread : public QThread
@@ -96,9 +103,8 @@ private:
     QString outputDirectory;
     std::atomic<bool> m_cancel;
     
-    void processEncryptDecrypt();
-    void processWipe();
-    void processHash();
+    void processDirectory(Operation op, const QString &dirPath);
+    void processSingleFile(Operation op, const QString &filePath);
 };
 
 #endif // MAINWINDOW_H

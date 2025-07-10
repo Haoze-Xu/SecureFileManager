@@ -9,8 +9,12 @@
 #include <QScrollBar>
 #include <QDir>
 #include <QDebug>
-#include <QMimeData> // 添加拖拽事件所需头文件
-#include <QUrl>      // 添加拖拽事件所需头文件
+#include <QMimeData>
+#include <QUrl>
+#include <QTreeWidgetItem>
+#include <QStyle>
+#include <QApplication>
+#include <QFileInfoList>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -20,6 +24,15 @@ MainWindow::MainWindow(QWidget *parent)
     
     // 设置窗口标题和图标
     setWindowTitle("跨平台文件安全管理系统");
+    
+    // 配置树形控件
+    ui->fileTreeWidget->setHeaderLabels({"文件名", "大小", "类型", "修改日期"});
+    ui->fileTreeWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    ui->fileTreeWidget->setSortingEnabled(true);
+    
+    // 连接添加目录按钮
+    connect(ui->addDirectoryButton, &QPushButton::clicked, 
+            this, &MainWindow::on_addDirectoryButton_clicked);
     
     // 初始化状态
     ui->progressBar->setVisible(false);
@@ -49,8 +62,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    workerThread->quit();
-    workerThread->wait();
+    if (workerThread) {
+        workerThread->quit();
+        workerThread->wait();
+    }
     delete ui;
 }
 
@@ -62,28 +77,52 @@ void MainWindow::on_addFilesButton_clicked()
         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
     
     if (!files.isEmpty()) {
-        ui->fileListWidget->addItems(files);
         foreach (const QString &file, files) {
-            logMessage(QString("添加文件: %1").arg(QFileInfo(file).fileName()));
+            QFileInfo info(file);
+            QTreeWidgetItem *item = new QTreeWidgetItem(ui->fileTreeWidget);
+            item->setText(0, info.fileName());
+            item->setText(1, QString("%1 KB").arg(info.size() / 1024));
+            item->setText(2, info.suffix().isEmpty() ? "文件" : info.suffix());
+            item->setText(3, info.lastModified().toString("yyyy-MM-dd hh:mm"));
+            item->setIcon(0, QApplication::style()->standardIcon(QStyle::SP_FileIcon));
+            item->setData(0, Qt::UserRole, info.absoluteFilePath());
+            logMessage(QString("添加文件: %1").arg(info.fileName()));
         }
+    }
+}
+
+void MainWindow::on_addDirectoryButton_clicked()
+{
+    QString dirPath = QFileDialog::getExistingDirectory(this, "选择目录", 
+        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation));
+    
+    if (!dirPath.isEmpty()) {
+        loadDirectory(dirPath, nullptr);
+        logMessage(QString("添加目录: %1").arg(dirPath));
     }
 }
 
 void MainWindow::on_removeSelectedButton_clicked()
 {
-    QList<QListWidgetItem*> items = ui->fileListWidget->selectedItems();
+    QList<QTreeWidgetItem*> items = ui->fileTreeWidget->selectedItems();
     if (items.isEmpty()) {
-        logMessage("没有选中的文件", true);
+        logMessage("没有选中的项目", true);
         return;
     }
     
-    qDeleteAll(items);
-    logMessage(QString("移除了 %1 个文件").arg(items.size()));
+    int count = 0;
+    foreach (QTreeWidgetItem *item, items) {
+        // 递归删除所有子项
+        delete item;
+        count++;
+    }
+    
+    logMessage(QString("移除了 %1 个项目").arg(count));
 }
 
 void MainWindow::on_clearListButton_clicked()
 {
-    ui->fileListWidget->clear();
+    ui->fileTreeWidget->clear();
     logMessage("清除了文件列表");
 }
 
@@ -91,8 +130,8 @@ void MainWindow::on_clearListButton_clicked()
 
 void MainWindow::on_encryptButton_clicked()
 {
-    if (ui->fileListWidget->count() == 0) {
-        logMessage("请先添加文件", true);
+    if (ui->fileTreeWidget->topLevelItemCount() == 0) {
+        logMessage("请先添加文件或目录", true);
         return;
     }
     
@@ -110,21 +149,22 @@ void MainWindow::on_encryptButton_clicked()
     lastOutputDir = outputDir;
     
     // 准备文件列表
-    QList<QString> files;
-    for (int i = 0; i < ui->fileListWidget->count(); i++) {
-        files.append(ui->fileListWidget->item(i)->text());
+    QList<QString> files = collectSelectedFiles();
+    if (files.isEmpty()) {
+        logMessage("没有选中的文件", true);
+        return;
     }
     
     // 开始加密操作
     updateControlsState(false);
-    logMessage("开始加密操作...");
+    logMessage(QString("开始加密操作 (%1 个项目)...").arg(files.size()));
     workerThread->processFiles(WorkerThread::Encrypt, files, password, outputDir);
 }
 
 void MainWindow::on_decryptButton_clicked()
 {
-    if (ui->fileListWidget->count() == 0) {
-        logMessage("请先添加文件", true);
+    if (ui->fileTreeWidget->topLevelItemCount() == 0) {
+        logMessage("请先添加文件或目录", true);
         return;
     }
     
@@ -141,42 +181,46 @@ void MainWindow::on_decryptButton_clicked()
     // 保存最后使用的目录
     lastOutputDir = outputDir;
     
-    QList<QString> files;
-    for (int i = 0; i < ui->fileListWidget->count(); i++) {
-        files.append(ui->fileListWidget->item(i)->text());
+    // 准备文件列表
+    QList<QString> files = collectSelectedFiles();
+    if (files.isEmpty()) {
+        logMessage("没有选中的文件", true);
+        return;
     }
     
     updateControlsState(false);
-    logMessage("开始解密操作...");
+    logMessage(QString("开始解密操作 (%1 个项目)...").arg(files.size()));
     workerThread->processFiles(WorkerThread::Decrypt, files, password, outputDir);
 }
 
 void MainWindow::on_wipeButton_clicked()
 {
-    if (ui->fileListWidget->count() == 0) {
-        logMessage("请先添加文件", true);
+    if (ui->fileTreeWidget->topLevelItemCount() == 0) {
+        logMessage("请先添加文件或目录", true);
         return;
     }
 
+    // 获取选中的文件（不包括目录）
+    QList<QString> files = collectSelectedFiles();
+    if (files.isEmpty()) {
+        logMessage("没有选中的文件", true);
+        return;
+    }
+    
     // 危险操作确认对话框
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "危险操作确认",
                                 QString("安全擦除将永久删除 %1 个文件，不可恢复！\n确定要继续吗？")
-                                .arg(ui->fileListWidget->count()),
+                                .arg(files.size()),
                                 QMessageBox::Yes | QMessageBox::No);
     
     if (reply != QMessageBox::Yes) {
-        logMessage(QString("安全擦除操作已取消 (%1 个文件)").arg(ui->fileListWidget->count()));
+        logMessage(QString("安全擦除操作已取消 (%1 个文件)").arg(files.size()));
         return;
     }
 
-    QList<QString> files;
-    for (int i = 0; i < ui->fileListWidget->count(); i++) {
-        files.append(ui->fileListWidget->item(i)->text());
-    }
-    
     updateControlsState(false);
-    logMessage("开始安全擦除操作...");
+    logMessage(QString("开始安全擦除操作 (%1 个文件)...").arg(files.size()));
     workerThread->processFiles(WorkerThread::Wipe, files, "");
 }
 
@@ -184,18 +228,19 @@ void MainWindow::on_wipeButton_clicked()
 
 void MainWindow::on_calculateHashButton_clicked()
 {
-    if (ui->fileListWidget->count() == 0) {
-        logMessage("请先添加文件", true);
+    if (ui->fileTreeWidget->topLevelItemCount() == 0) {
+        logMessage("请先添加文件或目录", true);
         return;
     }
     
-    QList<QString> files;
-    for (int i = 0; i < ui->fileListWidget->count(); i++) {
-        files.append(ui->fileListWidget->item(i)->text());
+    QList<QString> files = collectSelectedFiles();
+    if (files.isEmpty()) {
+        logMessage("没有选中的文件", true);
+        return;
     }
     
     updateControlsState(false);
-    logMessage("开始计算文件哈希值...");
+    logMessage(QString("开始计算文件哈希值 (%1 个文件)...").arg(files.size()));
     workerThread->processFiles(WorkerThread::CalculateHash, files, "");
 }
 
@@ -304,8 +349,9 @@ void MainWindow::logMessage(const QString &message, bool isError)
 
 void MainWindow::updateControlsState(bool enabled)
 {
-    ui->fileListWidget->setEnabled(enabled);
+    ui->fileTreeWidget->setEnabled(enabled);
     ui->addFilesButton->setEnabled(enabled);
+    ui->addDirectoryButton->setEnabled(enabled);
     ui->removeSelectedButton->setEnabled(enabled);
     ui->clearListButton->setEnabled(enabled);
     ui->encryptButton->setEnabled(enabled);
@@ -315,9 +361,7 @@ void MainWindow::updateControlsState(bool enabled)
     ui->passwordLineEdit->setEnabled(enabled);
     ui->showPasswordCheckBox->setEnabled(enabled);
     
-    if (ui->cancelButton) {
-        ui->cancelButton->setEnabled(!enabled);
-    }
+    ui->cancelButton->setEnabled(!enabled);
     
     ui->progressBar->setVisible(!enabled);
     if (!enabled) {
@@ -339,15 +383,102 @@ void MainWindow::dropEvent(QDropEvent *event)
     const QMimeData *mimeData = event->mimeData();
     if (mimeData->hasUrls()) {
         QList<QUrl> urlList = mimeData->urls();
-        QStringList filePaths;
+        int count = 0;
+        
         for (const QUrl &url : urlList) {
             if (url.isLocalFile()) {
-                filePaths.append(url.toLocalFile());
+                QFileInfo info(url.toLocalFile());
+                if (info.isDir()) {
+                    loadDirectory(info.absoluteFilePath(), nullptr);
+                    count++;
+                } else {
+                    // 添加单个文件
+                    QTreeWidgetItem *item = new QTreeWidgetItem(ui->fileTreeWidget);
+                    item->setText(0, info.fileName());
+                    item->setText(1, QString("%1 KB").arg(info.size() / 1024));
+                    item->setText(2, info.suffix().isEmpty() ? "文件" : info.suffix());
+                    item->setText(3, info.lastModified().toString("yyyy-MM-dd hh:mm"));
+                    item->setIcon(0, QApplication::style()->standardIcon(QStyle::SP_FileIcon));
+                    item->setData(0, Qt::UserRole, info.absoluteFilePath());
+                    count++;
+                }
             }
         }
-        if (!filePaths.isEmpty()) {
-            ui->fileListWidget->addItems(filePaths);
-            logMessage(QString("拖拽添加了 %1 个文件").arg(filePaths.size()));
+        
+        if (count > 0) {
+            logMessage(QString("拖拽添加了 %1 个项目").arg(count));
+        }
+    }
+}
+
+// ==================== 树形目录功能 ====================
+
+void MainWindow::loadDirectory(const QString &path, QTreeWidgetItem *parent)
+{
+    QDir dir(path);
+    if (!dir.exists()) {
+        logMessage(QString("目录不存在: %1").arg(path), true);
+        return;
+    }
+
+    // 创建目录节点
+    QTreeWidgetItem *dirItem = new QTreeWidgetItem(parent);
+    dirItem->setText(0, dir.dirName());
+    dirItem->setIcon(0, QApplication::style()->standardIcon(QStyle::SP_DirIcon));
+    dirItem->setData(0, Qt::UserRole, path);
+    dirItem->setFlags(dirItem->flags() | Qt::ItemIsSelectable);
+    
+    if (!parent) {
+        ui->fileTreeWidget->addTopLevelItem(dirItem);
+    }
+    
+    // 添加文件
+    QFileInfoList fileList = dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+    for (const QFileInfo &info : fileList) {
+        QTreeWidgetItem *fileItem = new QTreeWidgetItem(dirItem);
+        fileItem->setText(0, info.fileName());
+        fileItem->setText(1, QString("%1 KB").arg(info.size() / 1024));
+        fileItem->setText(2, info.suffix().isEmpty() ? "文件" : info.suffix());
+        fileItem->setText(3, info.lastModified().toString("yyyy-MM-dd hh:mm"));
+        fileItem->setIcon(0, QApplication::style()->standardIcon(QStyle::SP_FileIcon));
+        fileItem->setData(0, Qt::UserRole, info.absoluteFilePath());
+        fileItem->setFlags(fileItem->flags() | Qt::ItemIsSelectable);
+    }
+    
+    // 递归添加子目录
+    QFileInfoList dirList = dir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QFileInfo &subDir : dirList) {
+        loadDirectory(subDir.absoluteFilePath(), dirItem);
+    }
+    
+    dirItem->setExpanded(true);
+}
+
+QList<QString> MainWindow::collectSelectedFiles()
+{
+    QList<QString> files;
+    QList<QTreeWidgetItem*> items = ui->fileTreeWidget->selectedItems();
+    
+    for (QTreeWidgetItem *item : items) {
+        collectFilesFromItem(item, files);
+    }
+    
+    return files;
+}
+
+void MainWindow::collectFilesFromItem(QTreeWidgetItem *item, QList<QString> &files)
+{
+    // 检查是否是文件节点
+    if (item->childCount() == 0) {
+        QString filePath = item->data(0, Qt::UserRole).toString();
+        if (!filePath.isEmpty()) {
+            files.append(filePath);
+        }
+    } 
+    // 如果是目录节点，递归处理所有子项
+    else {
+        for (int i = 0; i < item->childCount(); i++) {
+            collectFilesFromItem(item->child(i), files);
         }
     }
 }
@@ -378,17 +509,26 @@ void WorkerThread::run()
             return;
         }
         
-        switch (currentOp) {
-        case Encrypt:
-        case Decrypt:
-            processEncryptDecrypt();
-            break;
-        case Wipe:
-            processWipe();
-            break;
-        case CalculateHash:
-            processHash();
-            break;
+        const int totalFiles = fileList.size();
+        int processedFiles = 0;
+        
+        foreach (const QString &path, fileList) {
+            if (m_cancel) {
+                emit operationCompleted(false, "操作已取消");
+                return;
+            }
+            
+            QFileInfo info(path);
+            if (info.isDir()) {
+                processDirectory(currentOp, path);
+            } else {
+                processSingleFile(currentOp, path);
+            }
+            
+            processedFiles++;
+            int progress = static_cast<int>((processedFiles * 100) / totalFiles);
+            emit progressChanged(progress, 
+                QString("已完成 %1/%2").arg(processedFiles).arg(totalFiles));
         }
         
         emit operationCompleted(true, "所有操作成功完成");
@@ -397,119 +537,103 @@ void WorkerThread::run()
     }
 }
 
-void WorkerThread::processEncryptDecrypt()
+void WorkerThread::processDirectory(Operation op, const QString &dirPath)
 {
-    const int totalFiles = fileList.size();
-    int processedFiles = 0;
+    QDir dir(dirPath);
+    if (!dir.exists()) {
+        emit logMessageRequested(QString("目录不存在: %1").arg(dirPath), true);
+        return;
+    }
     
-    foreach (const QString &filePath, fileList) {
-        if (m_cancel) {
-            emit operationCompleted(false, "操作已取消");
-            return;
-        }
+    // 获取目录下所有文件和子目录
+    QFileInfoList entries = dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
+    int totalEntries = entries.size();
+    int processed = 0;
+    
+    for (const QFileInfo &entry : entries) {
+        if (m_cancel) return;
         
-        QFileInfo fileInfo(filePath);
-        QString outputPath;
+        processed++;
+        int progress = static_cast<int>((processed * 100) / totalEntries);
+        emit progressChanged(progress, QString("处理目录: %1 (%2/%3)")
+                                .arg(dir.dirName())
+                                .arg(processed)
+                                .arg(totalEntries));
+        
+        if (entry.isFile()) {
+            processSingleFile(op, entry.absoluteFilePath());
+        } else if (entry.isDir()) {
+            processDirectory(op, entry.absoluteFilePath());
+        }
+    }
+}
 
-        // 解密前的文件验证
-        if (currentOp == Decrypt) {
-            if (!CryptoEngine::isEncryptedFile(filePath.toStdString())) {
-                QString errorMsg = QString("'%1' 不是有效的加密文件")
-                                    .arg(fileInfo.fileName());
-                emit progressChanged(0, errorMsg);
-                throw std::runtime_error(errorMsg.toStdString());
-            }
-        }
+void WorkerThread::processSingleFile(Operation op, const QString &filePath)
+{
+    QFileInfo fileInfo(filePath);
+    QString outputPath;
+    
+    // 更新处理状态
+    emit progressChanged(0, QString("正在处理: %1").arg(fileInfo.fileName()));
+    
+    try {
+        // 定义进度回调
+        auto progressCallback = [this, fileInfo](int progress) {
+            QString msg = QString("处理 %1: %2%")
+                         .arg(fileInfo.fileName())
+                         .arg(progress);
+            emit progressChanged(progress, msg);
+        };
         
-        // 确定输出路径
-        if (currentOp == Encrypt) {
+        if (op == Encrypt) {
+            // 确定输出路径
             outputPath = outputDirectory + "/" + fileInfo.fileName() + ".enc";
-        } else {
+            
+            CryptoEngine::encryptFile(
+                filePath.toStdString(), 
+                outputPath.toStdString(), 
+                password.toStdString(),
+                progressCallback
+            );
+            
+            // 添加详细的加密成功日志
+            QFileInfo outInfo(outputPath);
+            QString successMsg = QString("加密成功! 输出文件: %1 (大小: %2 字节)")
+                                .arg(outInfo.absoluteFilePath())
+                                .arg(outInfo.size());
+            emit logMessageRequested(successMsg);
+        } 
+        else if (op == Decrypt) {
+            // 解密前的文件验证
+            if (!CryptoEngine::isEncryptedFile(filePath.toStdString())) {
+                QString errorMsg = QString("'%1' 不是有效的加密文件，跳过")
+                                    .arg(fileInfo.fileName());
+                emit logMessageRequested(errorMsg, true);
+                return;
+            }
+            
+            // 确定输出路径
             QString baseName = fileInfo.fileName();
             if (baseName.endsWith(".enc")) {
                 baseName.chop(4);
             }
             outputPath = outputDirectory + "/decrypted_" + baseName;
-        }
-        
-        // 更新处理状态
-        emit progressChanged(0, QString("正在处理: %1").arg(fileInfo.fileName()));
-        
-        try {
-            // 定义进度回调
-            auto progressCallback = [this, fileInfo](int progress) {
-                QString msg = QString("处理 %1: %2%")
-                             .arg(fileInfo.fileName())
-                             .arg(progress);
-                emit progressChanged(progress, msg);
-            };
             
-            if (currentOp == Encrypt) {
-                CryptoEngine::encryptFile(
-                    filePath.toStdString(), 
-                    outputPath.toStdString(), 
-                    password.toStdString(),
-                    progressCallback  // 传递进度回调
-                );
-                
-                // 添加详细的加密成功日志
-                QFileInfo outInfo(outputPath);
-                QString successMsg = QString("加密成功! 输出文件: %1 (大小: %2 字节)")
-                                    .arg(outInfo.absoluteFilePath())
-                                    .arg(outInfo.size());
-                emit logMessageRequested(successMsg);
-            } else {
-                CryptoEngine::decryptFile(
-                    filePath.toStdString(), 
-                    outputPath.toStdString(), 
-                    password.toStdString(),
-                    progressCallback  // 传递进度回调
-                );
-                
-                // 添加详细的解密成功日志
-                QFileInfo outInfo(outputPath);
-                QString successMsg = QString("解密成功! 输出文件: %1 (大小: %2 字节)")
-                                    .arg(outInfo.absoluteFilePath())
-                                    .arg(outInfo.size());
-                emit logMessageRequested(successMsg);
-            }
+            CryptoEngine::decryptFile(
+                filePath.toStdString(), 
+                outputPath.toStdString(), 
+                password.toStdString(),
+                progressCallback
+            );
             
-            // 标记文件已处理
-            emit fileProcessed(filePath);
-        } 
-        catch (const std::exception &e) {
-            // 处理异常
-            QString errorMsg = QString("处理文件 %1 时出错: %2")
-                .arg(fileInfo.fileName(), e.what());
-            emit logMessageRequested(errorMsg, true);
-            
-            // 继续处理下一个文件
-            continue;
+            // 添加详细的解密成功日志
+            QFileInfo outInfo(outputPath);
+            QString successMsg = QString("解密成功! 输出文件: %1 (大小: %2 字节)")
+                                .arg(outInfo.absoluteFilePath())
+                                .arg(outInfo.size());
+            emit logMessageRequested(successMsg);
         }
-        
-        // 更新文件进度
-        processedFiles++;
-        int fileProgress = static_cast<int>((processedFiles * 100) / totalFiles);
-        emit progressChanged(fileProgress, 
-            QString("已完成 %1/%2").arg(processedFiles).arg(totalFiles));
-    }
-}
-
-void WorkerThread::processWipe()
-{
-    const int totalFiles = fileList.size();
-    int processed = 0;
-    
-    foreach (const QString &filePath, fileList) {
-        if (m_cancel) {
-            emit operationCompleted(false, "操作已取消");
-            return;
-        }
-        
-        QFileInfo fileInfo(filePath);
-        emit progressChanged(0, QString("正在安全擦除: %1").arg(fileInfo.fileName()));
-        
-        try {
+        else if (op == Wipe) {
             bool success = FileProcessor::secureDelete(filePath.toStdString());
             if (!success) {
                 throw std::runtime_error("安全擦除操作失败");
@@ -519,58 +643,22 @@ void WorkerThread::processWipe()
             QString successMsg = QString("已安全擦除: %1 (永久删除)")
                                 .arg(fileInfo.absoluteFilePath());
             emit logMessageRequested(successMsg);
-            
-            emit fileProcessed(filePath);
-        } catch (const std::exception &e) {
-            QString errorMsg = QString("擦除文件 %1 时出错: %2")
-                .arg(fileInfo.fileName(), e.what());
-            emit logMessageRequested(errorMsg, true);
-            
-            // 继续处理下一个文件
-            continue;
         }
-        
-        processed++;
-        int progress = static_cast<int>((processed * 100) / totalFiles);
-        emit progressChanged(progress, 
-            QString("已完成 %1/%2").arg(processed).arg(totalFiles));
-    }
-    
-    // 添加操作完成信息
-    emit operationCompleted(true, QString("安全擦除完成！已永久删除 %1 个文件").arg(totalFiles));
-}
-
-void WorkerThread::processHash() {
-    const int totalFiles = fileList.size();
-    int processed = 0;
-    
-    foreach (const QString &filePath, fileList) {
-        if (m_cancel) {
-            emit operationCompleted(false, "操作已取消");
-            return;
-        }
-        
-        QFileInfo fileInfo(filePath);
-        emit progressChanged(0, QString("正在计算哈希: %1").arg(fileInfo.fileName()));
-        
-        try {
+        else if (op == CalculateHash) {
             std::string hashValue = FileProcessor::calculateSHA256(filePath.toStdString());
             QString result = QString("%1 的 SHA-256: %2")
                 .arg(fileInfo.fileName(), QString::fromStdString(hashValue));
             
             emit logMessageRequested(result);
-            emit fileProcessed(filePath);
-        } catch (const std::exception &e) {
-            throw std::runtime_error(
-                QString("计算文件 %1 的哈希时出错: %2")
-                    .arg(fileInfo.fileName(), e.what())
-                    .toStdString()
-            );
         }
         
-        processed++;
-        int progress = static_cast<int>((processed * 100) / totalFiles);
-        emit progressChanged(progress, 
-            QString("已完成 %1/%2").arg(processed).arg(totalFiles));
+        // 标记文件已处理
+        emit fileProcessed(filePath);
+    } 
+    catch (const std::exception &e) {
+        // 处理异常
+        QString errorMsg = QString("处理文件 %1 时出错: %2")
+            .arg(fileInfo.fileName(), e.what());
+        emit logMessageRequested(errorMsg, true);
     }
 }

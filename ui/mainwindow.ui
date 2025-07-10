@@ -31,6 +31,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="addDirectoryButton">
+           <property name="text">
+            <string>添加目录</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="removeSelectedButton">
            <property name="text">
             <string>移除选中</string>
@@ -60,10 +67,33 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="fileListWidget">
+        <widget class="QTreeWidget" name="fileTreeWidget">
          <property name="selectionMode">
           <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
          </property>
+         <property name="headerHidden">
+          <bool>false</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string>文件名</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>大小</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>类型</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>修改日期</string>
+          </property>
+         </column>
         </widget>
        </item>
       </layout>

@@ -322,6 +322,34 @@ debug/moc_mainwindow.cpp: include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QThread \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDragEnterEvent \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDropEvent \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QTreeWidget \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreewidget.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreeview.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractscrollarea.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qabstractitemmodel.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qitemselectionmodel.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemdelegate.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qstyleoption.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractspinbox.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/qvalidator.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qregularexpression.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qslider.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractslider.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qstyle.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtabbar.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qrubberband.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreewidgetitemiterator.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QFileInfo \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qcalendar.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qtimezone.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
 		include/crypto_engine.h \
 		../cryptopp/include/cryptopp/aes.h \
 		../cryptopp/include/cryptopp/rijndael.h \
@@ -677,6 +705,34 @@ debug/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QThread \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDragEnterEvent \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDropEvent \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QTreeWidget \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreewidget.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreeview.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractscrollarea.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qabstractitemmodel.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qitemselectionmodel.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemdelegate.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qstyleoption.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractspinbox.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/qvalidator.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qregularexpression.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qslider.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractslider.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qstyle.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtabbar.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qrubberband.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreewidgetitemiterator.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QFileInfo \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qcalendar.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qtimezone.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
 		include/crypto_engine.h \
 		../cryptopp/include/cryptopp/aes.h \
 		../cryptopp/include/cryptopp/rijndael.h \
@@ -723,14 +779,6 @@ debug/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		ui_mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QFileDialog \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qfiledialog.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qcalendar.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qtimezone.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qdialog.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QMessageBox \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qmessagebox.h \
@@ -746,12 +794,15 @@ debug/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/qtextoption.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QScrollBar \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qscrollbar.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractslider.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDir \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDebug \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QMimeData \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qmimedata.h \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QUrl
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QUrl \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QTreeWidgetItem \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QStyle \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QApplication \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qapplication.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QFileInfoList
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug/mainwindow.o src/mainwindow.cpp
 
 debug/main.o: src/main.cpp include/mainwindow.h \
@@ -960,6 +1011,34 @@ debug/main.o: src/main.cpp include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QThread \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDragEnterEvent \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDropEvent \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/QTreeWidget \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreewidget.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreeview.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractscrollarea.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qabstractitemmodel.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qitemselectionmodel.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemdelegate.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qstyleoption.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractspinbox.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/qvalidator.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qregularexpression.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qslider.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractslider.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qstyle.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtabbar.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qrubberband.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qtreewidgetitemiterator.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QFileInfo \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfileinfo.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfile.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qfiledevice.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qcalendar.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qtimezone.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDir \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdir.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qdirlisting.h \
 		include/crypto_engine.h \
 		../cryptopp/include/cryptopp/aes.h \
 		../cryptopp/include/cryptopp/rijndael.h \

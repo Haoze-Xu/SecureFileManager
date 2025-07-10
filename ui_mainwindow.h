@@ -15,15 +15,16 @@
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QListWidget>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QTextEdit>
+#include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -38,10 +39,11 @@ public:
     QVBoxLayout *verticalLayout_2;
     QHBoxLayout *horizontalLayout;
     QPushButton *addFilesButton;
+    QPushButton *addDirectoryButton;
     QPushButton *removeSelectedButton;
     QPushButton *clearListButton;
     QSpacerItem *horizontalSpacer;
-    QListWidget *fileListWidget;
+    QTreeWidget *fileTreeWidget;
     QGroupBox *groupBox_2;
     QVBoxLayout *verticalLayout_3;
     QHBoxLayout *horizontalLayout_2;
@@ -84,6 +86,11 @@ public:
 
         horizontalLayout->addWidget(addFilesButton);
 
+        addDirectoryButton = new QPushButton(groupBox);
+        addDirectoryButton->setObjectName("addDirectoryButton");
+
+        horizontalLayout->addWidget(addDirectoryButton);
+
         removeSelectedButton = new QPushButton(groupBox);
         removeSelectedButton->setObjectName("removeSelectedButton");
 
@@ -101,11 +108,12 @@ public:
 
         verticalLayout_2->addLayout(horizontalLayout);
 
-        fileListWidget = new QListWidget(groupBox);
-        fileListWidget->setObjectName("fileListWidget");
-        fileListWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+        fileTreeWidget = new QTreeWidget(groupBox);
+        fileTreeWidget->setObjectName("fileTreeWidget");
+        fileTreeWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+        fileTreeWidget->setHeaderHidden(false);
 
-        verticalLayout_2->addWidget(fileListWidget);
+        verticalLayout_2->addWidget(fileTreeWidget);
 
 
         verticalLayout->addWidget(groupBox);
@@ -216,8 +224,14 @@ public:
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "\350\267\250\345\271\263\345\217\260\346\226\207\344\273\266\345\256\211\345\205\250\347\256\241\347\220\206\347\263\273\347\273\237", nullptr));
         groupBox->setTitle(QCoreApplication::translate("MainWindow", "\346\226\207\344\273\266\345\210\227\350\241\250", nullptr));
         addFilesButton->setText(QCoreApplication::translate("MainWindow", "\346\267\273\345\212\240\346\226\207\344\273\266", nullptr));
+        addDirectoryButton->setText(QCoreApplication::translate("MainWindow", "\346\267\273\345\212\240\347\233\256\345\275\225", nullptr));
         removeSelectedButton->setText(QCoreApplication::translate("MainWindow", "\347\247\273\351\231\244\351\200\211\344\270\255", nullptr));
         clearListButton->setText(QCoreApplication::translate("MainWindow", "\346\270\205\347\251\272\345\210\227\350\241\250", nullptr));
+        QTreeWidgetItem *___qtreewidgetitem = fileTreeWidget->headerItem();
+        ___qtreewidgetitem->setText(3, QCoreApplication::translate("MainWindow", "\344\277\256\346\224\271\346\227\245\346\234\237", nullptr));
+        ___qtreewidgetitem->setText(2, QCoreApplication::translate("MainWindow", "\347\261\273\345\236\213", nullptr));
+        ___qtreewidgetitem->setText(1, QCoreApplication::translate("MainWindow", "\345\244\247\345\260\217", nullptr));
+        ___qtreewidgetitem->setText(0, QCoreApplication::translate("MainWindow", "\346\226\207\344\273\266\345\220\215", nullptr));
         groupBox_2->setTitle(QCoreApplication::translate("MainWindow", "\345\256\211\345\205\250\350\256\276\347\275\256", nullptr));
         label->setText(QCoreApplication::translate("MainWindow", "\345\257\206\347\240\201:", nullptr));
         showPasswordCheckBox->setText(QCoreApplication::translate("MainWindow", "\346\230\276\347\244\272\345\257\206\347\240\201", nullptr));
