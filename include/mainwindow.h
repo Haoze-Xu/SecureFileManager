@@ -103,8 +103,8 @@ private:
     QString outputDirectory;
     std::atomic<bool> m_cancel;
     
-    void processDirectory(Operation op, const QString &dirPath);
-    void processSingleFile(Operation op, const QString &filePath);
+    bool processDirectory(Operation op, const QString &dirPath);
+    bool processSingleFile(Operation op, const QString &filePath);
 };
 
 #endif // MAINWINDOW_H

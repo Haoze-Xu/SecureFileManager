@@ -293,8 +293,9 @@ void MainWindow::handleCompleted(bool success, const QString &message)
     updateControlsState(true);
     
     logMessage(message, !success);
-    ui->statusLabel->setText(success ? "操作完成" : "操作失败");
+    ui->statusLabel->setText(message); // 显示更详细的状态信息
     
+    // 仅在完全成功时显示成功对话框
     if (success) {
         WorkerThread::Operation op = workerThread->currentOperation();
         
@@ -311,7 +312,8 @@ void MainWindow::handleCompleted(bool success, const QString &message)
         
         QMessageBox::information(this, "操作完成", detailMessage);
     } else {
-        QMessageBox::critical(this, "操作失败", message);
+        // 部分成功或完全失败时显示警告
+        QMessageBox::warning(this, "操作结果", message);
     }
 }
 
@@ -503,6 +505,9 @@ void WorkerThread::processFiles(Operation op, const QList<QString> &files,
 void WorkerThread::run()
 {
     m_cancel = false;
+    int successCount = 0; // 成功计数
+    int failCount = 0;    // 失败计数
+    
     try {
         if (m_cancel) {
             emit operationCompleted(false, "操作已取消");
@@ -514,15 +519,21 @@ void WorkerThread::run()
         
         foreach (const QString &path, fileList) {
             if (m_cancel) {
-                emit operationCompleted(false, "操作已取消");
-                return;
+                break; // 取消操作，跳出循环
             }
             
             QFileInfo info(path);
+            bool result = false;
             if (info.isDir()) {
-                processDirectory(currentOp, path);
+                result = processDirectory(currentOp, path);
             } else {
-                processSingleFile(currentOp, path);
+                result = processSingleFile(currentOp, path);
+            }
+            
+            if (result) {
+                successCount++;
+            } else {
+                failCount++;
             }
             
             processedFiles++;
@@ -531,27 +542,44 @@ void WorkerThread::run()
                 QString("已完成 %1/%2").arg(processedFiles).arg(totalFiles));
         }
         
-        emit operationCompleted(true, "所有操作成功完成");
+        // 根据成功和失败的数量生成结果消息
+        QString resultMsg;
+        bool overallSuccess = false;
+        
+        if (m_cancel) {
+            resultMsg = QString("操作已取消 (成功: %1, 失败: %2)").arg(successCount).arg(failCount);
+        } else if (failCount == 0) {
+            resultMsg = QString("所有操作成功完成 (共 %1 个文件)").arg(successCount);
+            overallSuccess = true;
+        } else if (successCount == 0) {
+            resultMsg = QString("所有操作失败 (共 %1 个文件)").arg(failCount);
+        } else {
+            resultMsg = QString("操作部分完成 (成功: %1, 失败: %2)").arg(successCount).arg(failCount);
+        }
+        
+        emit operationCompleted(overallSuccess, resultMsg);
     } catch (const std::exception &e) {
         emit operationCompleted(false, QString("操作失败: %1").arg(e.what()));
     }
 }
 
-void WorkerThread::processDirectory(Operation op, const QString &dirPath)
+// 修改函数签名，返回操作是否成功
+bool WorkerThread::processDirectory(Operation op, const QString &dirPath)
 {
     QDir dir(dirPath);
     if (!dir.exists()) {
         emit logMessageRequested(QString("目录不存在: %1").arg(dirPath), true);
-        return;
+        return false;
     }
     
     // 获取目录下所有文件和子目录
     QFileInfoList entries = dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
     int totalEntries = entries.size();
     int processed = 0;
+    bool allSuccess = true; // 跟踪目录内所有操作是否成功
     
     for (const QFileInfo &entry : entries) {
-        if (m_cancel) return;
+        if (m_cancel) return false;
         
         processed++;
         int progress = static_cast<int>((processed * 100) / totalEntries);
@@ -560,15 +588,23 @@ void WorkerThread::processDirectory(Operation op, const QString &dirPath)
                                 .arg(processed)
                                 .arg(totalEntries));
         
+        bool result = false;
         if (entry.isFile()) {
-            processSingleFile(op, entry.absoluteFilePath());
+            result = processSingleFile(op, entry.absoluteFilePath());
         } else if (entry.isDir()) {
-            processDirectory(op, entry.absoluteFilePath());
+            result = processDirectory(op, entry.absoluteFilePath());
+        }
+        
+        if (!result) {
+            allSuccess = false;
         }
     }
+    
+    return allSuccess;
 }
 
-void WorkerThread::processSingleFile(Operation op, const QString &filePath)
+// 修改函数签名，返回操作是否成功
+bool WorkerThread::processSingleFile(Operation op, const QString &filePath)
 {
     QFileInfo fileInfo(filePath);
     QString outputPath;
@@ -602,6 +638,11 @@ void WorkerThread::processSingleFile(Operation op, const QString &filePath)
                                 .arg(outInfo.absoluteFilePath())
                                 .arg(outInfo.size());
             emit logMessageRequested(successMsg);
+            
+            // 标记文件已处理
+            emit fileProcessed(filePath);
+            
+            return true;
         } 
         else if (op == Decrypt) {
             // 解密前的文件验证
@@ -609,7 +650,7 @@ void WorkerThread::processSingleFile(Operation op, const QString &filePath)
                 QString errorMsg = QString("'%1' 不是有效的加密文件，跳过")
                                     .arg(fileInfo.fileName());
                 emit logMessageRequested(errorMsg, true);
-                return;
+                return false;
             }
             
             // 确定输出路径
@@ -632,6 +673,11 @@ void WorkerThread::processSingleFile(Operation op, const QString &filePath)
                                 .arg(outInfo.absoluteFilePath())
                                 .arg(outInfo.size());
             emit logMessageRequested(successMsg);
+            
+            // 标记文件已处理
+            emit fileProcessed(filePath);
+            
+            return true;
         }
         else if (op == Wipe) {
             bool success = FileProcessor::secureDelete(filePath.toStdString());
@@ -643,6 +689,11 @@ void WorkerThread::processSingleFile(Operation op, const QString &filePath)
             QString successMsg = QString("已安全擦除: %1 (永久删除)")
                                 .arg(fileInfo.absoluteFilePath());
             emit logMessageRequested(successMsg);
+            
+            // 标记文件已处理
+            emit fileProcessed(filePath);
+            
+            return true;
         }
         else if (op == CalculateHash) {
             std::string hashValue = FileProcessor::calculateSHA256(filePath.toStdString());
@@ -650,15 +701,20 @@ void WorkerThread::processSingleFile(Operation op, const QString &filePath)
                 .arg(fileInfo.fileName(), QString::fromStdString(hashValue));
             
             emit logMessageRequested(result);
+            
+            // 标记文件已处理
+            emit fileProcessed(filePath);
+            
+            return true;
         }
         
-        // 标记文件已处理
-        emit fileProcessed(filePath);
+        return false; // 未知操作类型
     } 
     catch (const std::exception &e) {
         // 处理异常
         QString errorMsg = QString("处理文件 %1 时出错: %2")
             .arg(fileInfo.fileName(), e.what());
         emit logMessageRequested(errorMsg, true);
+        return false;
     }
 }
