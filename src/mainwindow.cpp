@@ -220,8 +220,26 @@ void MainWindow::on_cancelButton_clicked()
 
 void MainWindow::handleProgress(int value, const QString &message)
 {
-    ui->progressBar->setValue(value);
-    ui->statusLabel->setText(QString("%1 (%2%)").arg(message).arg(value));
+    // 确保进度值在有效范围内
+    int progress = qBound(0, value, 100);
+    ui->progressBar->setValue(progress);
+    
+    // 添加详细进度信息
+    QString fullMessage;
+    if (message.contains("%")) {
+        // 如果消息已经包含百分比，直接使用
+        fullMessage = message;
+    } else {
+        // 否则添加百分比
+        fullMessage = QString("%1 (%2%)").arg(message).arg(progress);
+    }
+    
+    ui->statusLabel->setText(fullMessage);
+    
+    // 实时更新日志
+    if (progress % 10 == 0 || progress == 100) {
+        logMessage(fullMessage);
+    }
 }
 
 void MainWindow::handleCompleted(bool success, const QString &message)
@@ -418,50 +436,61 @@ void WorkerThread::processEncryptDecrypt()
         emit progressChanged(0, QString("正在处理: %1").arg(fileInfo.fileName()));
         
         try {
-            // 执行加密/解密操作
+            // 定义进度回调
+            auto progressCallback = [this, fileInfo](int progress) {
+                QString msg = QString("处理 %1: %2%")
+                             .arg(fileInfo.fileName())
+                             .arg(progress);
+                emit progressChanged(progress, msg);
+            };
+            
             if (currentOp == Encrypt) {
                 CryptoEngine::encryptFile(
                     filePath.toStdString(), 
                     outputPath.toStdString(), 
-                    password.toStdString()
+                    password.toStdString(),
+                    progressCallback  // 传递进度回调
                 );
                 
                 // 添加详细的加密成功日志
                 QFileInfo outInfo(outputPath);
                 QString successMsg = QString("加密成功! 输出文件: %1 (大小: %2 字节)")
-                                    .arg(outInfo.fileName())
+                                    .arg(outInfo.absoluteFilePath())
                                     .arg(outInfo.size());
-                emit progressChanged(0, successMsg);
+                emit logMessageRequested(successMsg);
             } else {
                 CryptoEngine::decryptFile(
                     filePath.toStdString(), 
                     outputPath.toStdString(), 
-                    password.toStdString()
+                    password.toStdString(),
+                    progressCallback  // 传递进度回调
                 );
                 
                 // 添加详细的解密成功日志
                 QFileInfo outInfo(outputPath);
                 QString successMsg = QString("解密成功! 输出文件: %1 (大小: %2 字节)")
-                                    .arg(outInfo.fileName())
+                                    .arg(outInfo.absoluteFilePath())
                                     .arg(outInfo.size());
-                emit progressChanged(0, successMsg);
+                emit logMessageRequested(successMsg);
             }
             
             // 标记文件已处理
             emit fileProcessed(filePath);
         } 
         catch (const std::exception &e) {
-            throw std::runtime_error(
-                QString("处理文件 %1 时出错: %2")
-                    .arg(fileInfo.fileName(), e.what())
-                    .toStdString()
-            );
+            // 处理异常
+            QString errorMsg = QString("处理文件 %1 时出错: %2")
+                .arg(fileInfo.fileName(), e.what());
+            emit logMessageRequested(errorMsg, true);
+            
+            // 继续处理下一个文件
+            continue;
         }
         
-        // 更新进度
+        // 更新文件进度
         processedFiles++;
-        int progress = static_cast<int>((processedFiles * 100) / totalFiles);
-        emit progressChanged(progress, 
+        int fileProgress = static_cast<int>((processedFiles * 100) / totalFiles);
+        emit progressChanged(fileProgress, 
             QString("已完成 %1/%2").arg(processedFiles).arg(totalFiles));
     }
 }
@@ -486,16 +515,19 @@ void WorkerThread::processWipe()
                 throw std::runtime_error("安全擦除操作失败");
             }
             
-            QString successMsg = QString("已安全擦除: %1 (永久删除)").arg(fileInfo.fileName());
+            // 添加详细的擦除确认
+            QString successMsg = QString("已安全擦除: %1 (永久删除)")
+                                .arg(fileInfo.absoluteFilePath());
             emit logMessageRequested(successMsg);
             
             emit fileProcessed(filePath);
         } catch (const std::exception &e) {
-            throw std::runtime_error(
-                QString("擦除文件 %1 时出错: %2")
-                    .arg(fileInfo.fileName(), e.what())
-                    .toStdString()
-            );
+            QString errorMsg = QString("擦除文件 %1 时出错: %2")
+                .arg(fileInfo.fileName(), e.what());
+            emit logMessageRequested(errorMsg, true);
+            
+            // 继续处理下一个文件
+            continue;
         }
         
         processed++;
@@ -504,6 +536,7 @@ void WorkerThread::processWipe()
             QString("已完成 %1/%2").arg(processed).arg(totalFiles));
     }
     
+    // 添加操作完成信息
     emit operationCompleted(true, QString("安全擦除完成！已永久删除 %1 个文件").arg(totalFiles));
 }
 

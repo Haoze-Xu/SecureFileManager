@@ -11,13 +11,17 @@
 
 class CryptoEngine {
 public:
+    using ProgressCallback = std::function<void(int)>;
+
     static bool encryptFile(const std::string& inputPath, 
                            const std::string& outputPath, 
-                           const std::string& password);
+                           const std::string& password,
+                           ProgressCallback callback = nullptr);
     
     static bool decryptFile(const std::string& inputPath, 
                            const std::string& outputPath, 
-                           const std::string& password);
+                           const std::string& password,
+                           ProgressCallback callback = nullptr);
     
     static int passwordStrength(const std::string& password);
 
