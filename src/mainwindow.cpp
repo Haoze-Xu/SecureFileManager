@@ -1,5 +1,6 @@
 #include "../include/mainwindow.h"
 #include "ui_mainwindow.h"
+#include "../include/file_processor.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QStandardPaths>
@@ -50,7 +51,11 @@ void MainWindow::on_addFilesButton_clicked()
     
     if (!files.isEmpty()) {
         ui->fileListWidget->addItems(files);
-        logMessage(QString("添加了 %1 个文件").arg(files.size()));
+
+        // ==== 增强日志：显示每个添加的文件名 ====
+        foreach (const QString &file, files) {
+            logMessage(QString("添加文件: %1").arg(QFileInfo(file).fileName()));
+        }
     }
 }
 
@@ -138,7 +143,20 @@ void MainWindow::on_wipeButton_clicked()
         logMessage("请先添加文件", true);
         return;
     }
+
+    // ==== 添加危险操作确认对话框 ====
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "危险操作确认",
+                                QString("安全擦除将永久删除 %1 个文件，不可恢复！\n确定要继续吗？")
+                                .arg(ui->fileListWidget->count()),
+                                QMessageBox::Yes | QMessageBox::No);
     
+    if (reply != QMessageBox::Yes) {
+        logMessage(QString("安全擦除操作已取消 (%1 个文件)").arg(ui->fileListWidget->count()));
+        return;
+    }
+    // ==============================
+
     QList<QString> files;
     for (int i = 0; i < ui->fileListWidget->count(); i++) {
         files.append(ui->fileListWidget->item(i)->text());
@@ -287,7 +305,18 @@ void WorkerThread::processEncryptDecrypt()
     foreach (const QString &filePath, fileList) {
         QFileInfo fileInfo(filePath);
         QString outputPath;
+
+        // 解密前的文件验证
+        if (currentOp == Decrypt) {
+            if (!CryptoEngine::isEncryptedFile(filePath.toStdString())) {
+                QString errorMsg = QString("'%1' 不是有效的加密文件")
+                                    .arg(fileInfo.fileName());
+                emit progressChanged(0, errorMsg);
+                throw std::runtime_error(errorMsg.toStdString());
+            }
+        }
         
+        // 确定输出路径
         if (currentOp == Encrypt) {
             outputPath = outputDirectory + "/" + fileInfo.fileName() + ".enc";
         } else {
@@ -298,25 +327,44 @@ void WorkerThread::processEncryptDecrypt()
             outputPath = outputDirectory + "/decrypted_" + baseName;
         }
         
+        // 更新处理状态
         emit progressChanged(0, QString("正在处理: %1").arg(fileInfo.fileName()));
         
         try {
+            // 执行加密/解密操作
             if (currentOp == Encrypt) {
                 CryptoEngine::encryptFile(
                     filePath.toStdString(), 
                     outputPath.toStdString(), 
                     password.toStdString()
                 );
+                
+                // 添加详细的加密成功日志
+                QFileInfo outInfo(outputPath);
+                QString successMsg = QString("加密成功! 输出文件: %1 (大小: %2 字节)")
+                                    .arg(outInfo.fileName())
+                                    .arg(outInfo.size());
+                emit progressChanged(0, successMsg);
             } else {
                 CryptoEngine::decryptFile(
                     filePath.toStdString(), 
                     outputPath.toStdString(), 
                     password.toStdString()
                 );
+                
+                // 添加详细的解密成功日志
+                QFileInfo outInfo(outputPath);
+                QString successMsg = QString("解密成功! 输出文件: %1 (大小: %2 字节)")
+                                    .arg(outInfo.fileName())
+                                    .arg(outInfo.size());
+                emit progressChanged(0, successMsg);
             }
             
+            // 标记文件已处理
             emit fileProcessed(filePath);
-        } catch (const std::exception &e) {
+        } 
+        catch (const std::exception &e) {
+            // 处理异常
             throw std::runtime_error(
                 QString("处理文件 %1 时出错: %2")
                     .arg(fileInfo.fileName(), e.what())
@@ -324,6 +372,7 @@ void WorkerThread::processEncryptDecrypt()
             );
         }
         
+        // 更新进度
         processed++;
         int progress = static_cast<int>((processed * 100) / totalFiles);
         emit progressChanged(progress, 
@@ -347,6 +396,7 @@ void WorkerThread::processWipe()
             }
             
             emit fileProcessed(filePath);
+            emit progressChanged(0, QString("已安全擦除: %1").arg(fileInfo.fileName()));
         } catch (const std::exception &e) {
             throw std::runtime_error(
                 QString("擦除文件 %1 时出错: %2")
@@ -362,10 +412,7 @@ void WorkerThread::processWipe()
     }
 }
 
-void WorkerThread::processHash()
-{
-    // 哈希计算实现 (后续添加)
-    // 暂时模拟实现
+void WorkerThread::processHash() {
     const int totalFiles = fileList.size();
     int processed = 0;
     
@@ -373,15 +420,27 @@ void WorkerThread::processHash()
         QFileInfo fileInfo(filePath);
         emit progressChanged(0, QString("正在计算哈希: %1").arg(fileInfo.fileName()));
         
-        // 模拟计算耗时
-        QThread::msleep(500);
-        
-        // TODO: 实际计算哈希值
-        QString hashValue = "模拟哈希值: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069";
-        
-        emit progressChanged(0, QString("%1 的 SHA-256: %2")
-            .arg(fileInfo.fileName(), hashValue));
-        emit fileProcessed(filePath);
+        try {
+            // 实际计算哈希值
+            std::string hashValue = FileProcessor::calculateSHA256(filePath.toStdString());
+            QString result = QString("%1 的 SHA-256: %2")
+                .arg(fileInfo.fileName(), QString::fromStdString(hashValue));
+            
+            // 使用信号发送日志消息
+            emit progressChanged(0, result);
+            
+            // 同时记录到主日志
+            QMetaObject::invokeMethod(parent(), "logMessage", 
+                                     Q_ARG(QString, result));
+            
+            emit fileProcessed(filePath);
+        } catch (const std::exception &e) {
+            throw std::runtime_error(
+                QString("计算文件 %1 的哈希时出错: %2")
+                    .arg(fileInfo.fileName(), e.what())
+                    .toStdString()
+            );
+        }
         
         processed++;
         int progress = static_cast<int>((processed * 100) / totalFiles);

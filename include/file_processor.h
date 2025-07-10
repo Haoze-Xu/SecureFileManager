@@ -8,6 +8,8 @@ public:
     static bool fileExists(const std::string& path);
     static size_t fileSize(const std::string& path);
     static bool secureDelete(const std::string& path);
+    
+    static std::string calculateSHA256(const std::string& path);
 };
 
-#endif // FILE_PROCESSOR_H
+#endif

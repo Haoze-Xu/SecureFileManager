@@ -3,6 +3,10 @@
 #include <fstream>
 #include <random>
 #include <vector>
+#include <cryptopp/sha.h>
+#include <cryptopp/hex.h>
+#include <cryptopp/files.h>
+#include <cryptopp/filters.h>
 
 namespace fs = std::filesystem;
 
@@ -60,4 +64,29 @@ bool FileProcessor::secureDelete(const std::string& path) {
     } catch (...) {
         return false;
     }
+}
+
+std::string FileProcessor::calculateSHA256(const std::string& path) {
+    CryptoPP::SHA256 hash;
+    std::string digest;
+    
+    try {
+        CryptoPP::FileSource file(path.c_str(), true, 
+            new CryptoPP::HashFilter(hash,
+                new CryptoPP::HexEncoder(
+                    new CryptoPP::StringSink(digest)
+                )
+            ));
+        
+        // 移除尾部换行符（如果存在）
+        if (!digest.empty() && digest.back() == '\n') {
+            digest.pop_back();
+        }
+    } catch (const std::exception& e) {
+        throw std::runtime_error("计算哈希失败: " + std::string(e.what()));
+    } catch (...) {
+        throw std::runtime_error("未知错误导致哈希计算失败");
+    }
+    
+    return digest;
 }

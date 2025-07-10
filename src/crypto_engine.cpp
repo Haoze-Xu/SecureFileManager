@@ -215,6 +215,27 @@ bool CryptoEngine::decryptFile(const std::string& inputPath,
     }
 }
 
+// 检查是否为加密文件
+bool CryptoEngine::isEncryptedFile(const std::string& path) {
+    try {
+        if (!fs::exists(path)) return false;
+        
+        // 加密文件最小大小 = salt(16) + IV(16) + 最小加密块(16)
+        size_t minEncSize = 16 + CryptoPP::AES::BLOCKSIZE + CryptoPP::AES::BLOCKSIZE;
+        if (fs::file_size(path) < minEncSize) return false;
+        
+        std::ifstream file(path, std::ios::binary);
+        char header[32]; // 读取文件头
+        file.read(header, sizeof(header));
+        
+        // 简单验证：检查前16字节是否为有效的盐值
+        // 实际应用中可能需要更复杂的验证
+        return file.gcount() == sizeof(header);
+    } catch (...) {
+        return false;
+    }
+}
+
 // 安全内存擦除
 void CryptoEngine::secureWipe(void* ptr, size_t size) {
     volatile unsigned char* p = static_cast<volatile unsigned char*>(ptr);

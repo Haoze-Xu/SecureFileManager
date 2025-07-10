@@ -21,6 +21,8 @@ public:
     
     static int passwordStrength(const std::string& password);
 
+    static bool isEncryptedFile(const std::string& path);
+
 private:
     static void deriveKey(const std::string& password, 
                          CryptoPP::byte* key, size_t keySize, 
@@ -30,3 +32,4 @@ private:
 };
 
 #endif // CRYPTO_ENGINE_H
+
