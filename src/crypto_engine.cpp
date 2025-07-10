@@ -87,6 +87,7 @@ bool CryptoEngine::encryptFile(const std::string& inputPath,
         const size_t bufferSize = 1 * 1024 * 1024; // 1MB
         std::vector<char> buffer(bufferSize);
         size_t totalBytes = 0;
+        int lastProgress = -1; // 跟踪上一次的进度值
         
         while (inFile.read(buffer.data(), bufferSize)) {
             size_t bytesRead = static_cast<size_t>(inFile.gcount());
@@ -97,8 +98,12 @@ bool CryptoEngine::encryptFile(const std::string& inputPath,
             
             totalBytes += bytesRead;
             if (callback) {
-                int progress = static_cast<int>((totalBytes * 100) / fileSize);
-                callback(progress);
+                int newProgress = static_cast<int>((totalBytes * 100) / fileSize);
+                // 只有当进度变化时才调用回调
+                if (newProgress != lastProgress) {
+                    callback(newProgress);
+                    lastProgress = newProgress;
+                }
             }
         }
         
@@ -187,6 +192,7 @@ bool CryptoEngine::decryptFile(const std::string& inputPath,
         std::vector<char> buffer(bufferSize);
         size_t totalBytes = 0;
         size_t encryptedSize = fileSize - sizeof(salt) - sizeof(iv);
+        int lastProgress = -1; // 跟踪上一次的进度值
         
         while (inFile.read(buffer.data(), bufferSize)) {
             size_t bytesRead = static_cast<size_t>(inFile.gcount());
@@ -197,8 +203,12 @@ bool CryptoEngine::decryptFile(const std::string& inputPath,
             
             totalBytes += bytesRead;
             if (callback) {
-                int progress = static_cast<int>((totalBytes * 100) / encryptedSize);
-                callback(progress);
+                int newProgress = static_cast<int>((totalBytes * 100) / encryptedSize);
+                // 只有当进度变化时才调用回调
+                if (newProgress != lastProgress) {
+                    callback(newProgress);
+                    lastProgress = newProgress;
+                }
             }
         }
         
