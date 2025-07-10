@@ -50,9 +50,10 @@ public:
     QCheckBox *showPasswordCheckBox;
     QGroupBox *groupBox_3;
     QGridLayout *gridLayout;
-    QPushButton *encryptButton;
     QPushButton *decryptButton;
     QPushButton *wipeButton;
+    QPushButton *encryptButton;
+    QPushButton *cancelButton;
     QPushButton *calculateHashButton;
     QGroupBox *groupBox_4;
     QVBoxLayout *verticalLayout_4;
@@ -102,7 +103,7 @@ public:
 
         fileListWidget = new QListWidget(groupBox);
         fileListWidget->setObjectName("fileListWidget");
-        fileListWidget->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        fileListWidget->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
 
         verticalLayout_2->addWidget(fileListWidget);
 
@@ -140,11 +141,6 @@ public:
         groupBox_3->setObjectName("groupBox_3");
         gridLayout = new QGridLayout(groupBox_3);
         gridLayout->setObjectName("gridLayout");
-        encryptButton = new QPushButton(groupBox_3);
-        encryptButton->setObjectName("encryptButton");
-
-        gridLayout->addWidget(encryptButton, 0, 0, 1, 1);
-
         decryptButton = new QPushButton(groupBox_3);
         decryptButton->setObjectName("decryptButton");
 
@@ -155,10 +151,21 @@ public:
 
         gridLayout->addWidget(wipeButton, 0, 2, 1, 1);
 
+        encryptButton = new QPushButton(groupBox_3);
+        encryptButton->setObjectName("encryptButton");
+
+        gridLayout->addWidget(encryptButton, 0, 0, 1, 1);
+
+        cancelButton = new QPushButton(groupBox_3);
+        cancelButton->setObjectName("cancelButton");
+        cancelButton->setEnabled(false);
+
+        gridLayout->addWidget(cancelButton, 1, 0, 1, 1);
+
         calculateHashButton = new QPushButton(groupBox_3);
         calculateHashButton->setObjectName("calculateHashButton");
 
-        gridLayout->addWidget(calculateHashButton, 0, 3, 1, 1);
+        gridLayout->addWidget(calculateHashButton, 1, 2, 1, 1);
 
 
         verticalLayout->addWidget(groupBox_3);
@@ -215,9 +222,10 @@ public:
         label->setText(QCoreApplication::translate("MainWindow", "\345\257\206\347\240\201:", nullptr));
         showPasswordCheckBox->setText(QCoreApplication::translate("MainWindow", "\346\230\276\347\244\272\345\257\206\347\240\201", nullptr));
         groupBox_3->setTitle(QCoreApplication::translate("MainWindow", "\346\223\215\344\275\234", nullptr));
-        encryptButton->setText(QCoreApplication::translate("MainWindow", "\345\212\240\345\257\206\346\226\207\344\273\266", nullptr));
         decryptButton->setText(QCoreApplication::translate("MainWindow", "\350\247\243\345\257\206\346\226\207\344\273\266", nullptr));
         wipeButton->setText(QCoreApplication::translate("MainWindow", "\345\256\211\345\205\250\346\223\246\351\231\244", nullptr));
+        encryptButton->setText(QCoreApplication::translate("MainWindow", "\345\212\240\345\257\206\346\226\207\344\273\266", nullptr));
+        cancelButton->setText(QCoreApplication::translate("MainWindow", "\345\217\226\346\266\210\346\223\215\344\275\234", nullptr));
         calculateHashButton->setText(QCoreApplication::translate("MainWindow", "\350\256\241\347\256\227\345\223\210\345\270\214", nullptr));
         groupBox_4->setTitle(QCoreApplication::translate("MainWindow", "\346\223\215\344\275\234\347\212\266\346\200\201", nullptr));
         statusLabel->setText(QCoreApplication::translate("MainWindow", "\345\260\261\347\273\252", nullptr));

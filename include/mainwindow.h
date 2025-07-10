@@ -5,6 +5,8 @@
 #include <QList>
 #include <QProgressBar>
 #include <QThread>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include "../include/crypto_engine.h"
 #include "../include/file_processor.h"
 
@@ -22,6 +24,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+
 private slots:
     // 文件操作
     void on_addFilesButton_clicked();
@@ -37,6 +43,9 @@ private slots:
     void on_calculateHashButton_clicked();
     void on_showPasswordCheckBox_stateChanged(int state);
     
+    // 取消按钮
+    void on_cancelButton_clicked();
+    
     // 线程通信
     void handleProgress(int value, const QString &message);
     void handleCompleted(bool success, const QString &message);
@@ -48,8 +57,9 @@ private slots:
 private:
     Ui::MainWindow *ui;
     WorkerThread *workerThread;
+    QString lastOutputDir;
     
-    void updateControlsState(bool running);
+    void updateControlsState(bool enabled);
 };
 
 class WorkerThread : public QThread
@@ -67,15 +77,13 @@ public:
     void processFiles(Operation op, const QList<QString> &files, 
                      const QString &password, const QString &outputDir = "");
     
-    // 添加公共访问器
     Operation currentOperation() const { return currentOp; }
-    
+    void cancel() { m_cancel = true; }
+
 signals:
     void progressChanged(int value, const QString &message);
     void operationCompleted(bool success, const QString &message);
     void fileProcessed(const QString &filename);
-    
-    // 添加日志请求信号
     void logMessageRequested(const QString &message, bool isError = false);
     
 protected:
@@ -86,6 +94,7 @@ private:
     QList<QString> fileList;
     QString password;
     QString outputDirectory;
+    std::atomic<bool> m_cancel;
     
     void processEncryptDecrypt();
     void processWipe();

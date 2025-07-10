@@ -320,6 +320,8 @@ debug/moc_mainwindow.cpp: include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qprogressbar.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qframe.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QThread \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDragEnterEvent \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDropEvent \
 		include/crypto_engine.h \
 		../cryptopp/include/cryptopp/aes.h \
 		../cryptopp/include/cryptopp/rijndael.h \
@@ -672,6 +674,8 @@ debug/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qprogressbar.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qframe.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QThread \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDragEnterEvent \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDropEvent \
 		include/crypto_engine.h \
 		../cryptopp/include/cryptopp/aes.h \
 		../cryptopp/include/cryptopp/rijndael.h \
@@ -743,7 +747,10 @@ debug/mainwindow.o: src/mainwindow.cpp include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qscrollbar.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractslider.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDir \
-		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDebug
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QDebug \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QMimeData \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/qmimedata.h \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QUrl
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug/mainwindow.o src/mainwindow.cpp
 
 debug/main.o: src/main.cpp include/mainwindow.h \
@@ -950,6 +957,8 @@ debug/main.o: src/main.cpp include/mainwindow.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qprogressbar.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtWidgets/qframe.h \
 		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtCore/QThread \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDragEnterEvent \
+		../../MySoftWare/Qt/6.9.1/mingw_64/include/QtGui/QDropEvent \
 		include/crypto_engine.h \
 		../cryptopp/include/cryptopp/aes.h \
 		../cryptopp/include/cryptopp/rijndael.h \
