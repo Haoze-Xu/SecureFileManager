@@ -41,19 +41,20 @@ private slots:
     void handleProgress(int value, const QString &message);
     void handleCompleted(bool success, const QString &message);
     void handleFileProcessed(const QString &filename);
+    
+    // 日志方法
+    void logMessage(const QString &message, bool isError = false);
 
 private:
     Ui::MainWindow *ui;
     WorkerThread *workerThread;
     
     void updateControlsState(bool running);
-    void logMessage(const QString &message, bool isError = false);
 };
 
 class WorkerThread : public QThread
 {
     Q_OBJECT
-    
 public:
     enum Operation { 
         Encrypt, 
@@ -66,10 +67,16 @@ public:
     void processFiles(Operation op, const QList<QString> &files, 
                      const QString &password, const QString &outputDir = "");
     
+    // 添加公共访问器
+    Operation currentOperation() const { return currentOp; }
+    
 signals:
     void progressChanged(int value, const QString &message);
     void operationCompleted(bool success, const QString &message);
     void fileProcessed(const QString &filename);
+    
+    // 添加日志请求信号
+    void logMessageRequested(const QString &message, bool isError = false);
     
 protected:
     void run() override;

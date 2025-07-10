@@ -35,6 +35,10 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::handleCompleted);
     connect(workerThread, &WorkerThread::fileProcessed, 
             this, &MainWindow::handleFileProcessed);
+            
+    // 修复：添加日志信号连接
+    connect(workerThread, &WorkerThread::logMessageRequested,
+            this, &MainWindow::logMessage);
 }
 
 MainWindow::~MainWindow()
@@ -205,7 +209,21 @@ void MainWindow::handleCompleted(bool success, const QString &message)
     ui->statusLabel->setText(success ? "操作完成" : "操作失败");
     
     if (success) {
-        QMessageBox::information(this, "操作完成", message);
+        // 使用公共访问器获取操作类型
+        WorkerThread::Operation op = workerThread->currentOperation();
+        
+        QString detailMessage;
+        if (op == WorkerThread::Encrypt) {
+            detailMessage = "加密操作完成！所有文件已成功加密";
+        } else if (op == WorkerThread::Decrypt) {
+            detailMessage = "解密操作完成！所有文件已成功解密";
+        } else if (op == WorkerThread::Wipe) {
+            detailMessage = "安全擦除完成！所有文件已永久删除";
+        } else if (op == WorkerThread::CalculateHash) {
+            detailMessage = "哈希计算完成！结果已显示在日志中";
+        }
+        
+        QMessageBox::information(this, "操作完成", detailMessage);
     } else {
         QMessageBox::critical(this, "操作失败", message);
     }
@@ -310,7 +328,7 @@ void WorkerThread::processEncryptDecrypt()
         if (currentOp == Decrypt) {
             if (!CryptoEngine::isEncryptedFile(filePath.toStdString())) {
                 QString errorMsg = QString("'%1' 不是有效的加密文件")
-                                    .arg(fileInfo.fileName());
+                                    .arg(fileInfo.fileName()); // 使用当前文件名
                 emit progressChanged(0, errorMsg);
                 throw std::runtime_error(errorMsg.toStdString());
             }
@@ -395,8 +413,12 @@ void WorkerThread::processWipe()
                 throw std::runtime_error("安全擦除操作失败");
             }
             
+            // ==== 增强日志：明确擦除结果 ====
+            QString successMsg = QString("已安全擦除: %1 (永久删除)").arg(fileInfo.fileName());
+            QMetaObject::invokeMethod(parent(), "logMessage", 
+                                     Q_ARG(QString, successMsg));
+            
             emit fileProcessed(filePath);
-            emit progressChanged(0, QString("已安全擦除: %1").arg(fileInfo.fileName()));
         } catch (const std::exception &e) {
             throw std::runtime_error(
                 QString("擦除文件 %1 时出错: %2")
@@ -410,6 +432,9 @@ void WorkerThread::processWipe()
         emit progressChanged(progress, 
             QString("已完成 %1/%2").arg(processed).arg(totalFiles));
     }
+    
+    // ==== 添加操作完成信息 ====
+    emit operationCompleted(true, QString("安全擦除完成！已永久删除 %1 个文件").arg(totalFiles));
 }
 
 void WorkerThread::processHash() {
@@ -426,12 +451,8 @@ void WorkerThread::processHash() {
             QString result = QString("%1 的 SHA-256: %2")
                 .arg(fileInfo.fileName(), QString::fromStdString(hashValue));
             
-            // 使用信号发送日志消息
-            emit progressChanged(0, result);
-            
-            // 同时记录到主日志
-            QMetaObject::invokeMethod(parent(), "logMessage", 
-                                     Q_ARG(QString, result));
+            // ==== 修复：使用正确的信号 ====
+            emit logMessageRequested(result);
             
             emit fileProcessed(filePath);
         } catch (const std::exception &e) {

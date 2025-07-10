@@ -55,7 +55,9 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "handleCompleted",
         "success",
         "handleFileProcessed",
-        "filename"
+        "filename",
+        "logMessage",
+        "isError"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -88,6 +90,14 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         // Slot 'handleFileProcessed'
         QtMocHelpers::SlotData<void(const QString &)>(16, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::QString, 17 },
+        }}),
+        // Slot 'logMessage'
+        QtMocHelpers::SlotData<void(const QString &, bool)>(18, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::QString, 13 }, { QMetaType::Bool, 19 },
+        }}),
+        // Slot 'logMessage'
+        QtMocHelpers::SlotData<void(const QString &)>(18, 2, QMC::AccessPrivate | QMC::MethodCloned, QMetaType::Void, {{
+            { QMetaType::QString, 13 },
         }}),
     };
     QtMocHelpers::UintData qt_properties {
@@ -123,6 +133,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 8: _t->handleProgress((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
         case 9: _t->handleCompleted((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
         case 10: _t->handleFileProcessed((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 11: _t->logMessage((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<bool>>(_a[2]))); break;
+        case 12: _t->logMessage((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         default: ;
         }
     }
@@ -147,14 +159,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 11)
+        if (_id < 13)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 11;
+        _id -= 13;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 11)
+        if (_id < 13)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 11;
+        _id -= 13;
     }
     return _id;
 }
@@ -174,7 +186,9 @@ template <> constexpr inline auto WorkerThread::qt_create_metaobjectdata<qt_meta
         "operationCompleted",
         "success",
         "fileProcessed",
-        "filename"
+        "filename",
+        "logMessageRequested",
+        "isError"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -189,6 +203,14 @@ template <> constexpr inline auto WorkerThread::qt_create_metaobjectdata<qt_meta
         // Signal 'fileProcessed'
         QtMocHelpers::SignalData<void(const QString &)>(7, 2, QMC::AccessPublic, QMetaType::Void, {{
             { QMetaType::QString, 8 },
+        }}),
+        // Signal 'logMessageRequested'
+        QtMocHelpers::SignalData<void(const QString &, bool)>(9, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 4 }, { QMetaType::Bool, 10 },
+        }}),
+        // Signal 'logMessageRequested'
+        QtMocHelpers::SignalData<void(const QString &)>(9, 2, QMC::AccessPublic | QMC::MethodCloned, QMetaType::Void, {{
+            { QMetaType::QString, 4 },
         }}),
     };
     QtMocHelpers::UintData qt_properties {
@@ -216,6 +238,8 @@ void WorkerThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id
         case 0: _t->progressChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
         case 1: _t->operationCompleted((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
         case 2: _t->fileProcessed((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 3: _t->logMessageRequested((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<bool>>(_a[2]))); break;
+        case 4: _t->logMessageRequested((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         default: ;
         }
     }
@@ -225,6 +249,8 @@ void WorkerThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id
         if (QtMocHelpers::indexOfMethod<void (WorkerThread::*)(bool , const QString & )>(_a, &WorkerThread::operationCompleted, 1))
             return;
         if (QtMocHelpers::indexOfMethod<void (WorkerThread::*)(const QString & )>(_a, &WorkerThread::fileProcessed, 2))
+            return;
+        if (QtMocHelpers::indexOfMethod<void (WorkerThread::*)(const QString & , bool )>(_a, &WorkerThread::logMessageRequested, 3))
             return;
     }
 }
@@ -248,14 +274,14 @@ int WorkerThread::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 3)
+        if (_id < 5)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 3;
+        _id -= 5;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 3)
+        if (_id < 5)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 3;
+        _id -= 5;
     }
     return _id;
 }
@@ -276,5 +302,11 @@ void WorkerThread::operationCompleted(bool _t1, const QString & _t2)
 void WorkerThread::fileProcessed(const QString & _t1)
 {
     QMetaObject::activate<void>(this, &staticMetaObject, 2, nullptr, _t1);
+}
+
+// SIGNAL 3
+void WorkerThread::logMessageRequested(const QString & _t1, bool _t2)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 3, nullptr, _t1, _t2);
 }
 QT_WARNING_POP
